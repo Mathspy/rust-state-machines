@@ -32,7 +32,6 @@ Good work-life balance is key!
 There's something to note about this example which is that even though it would make no sense for us to have `currently_working_on` if the finite state is `SLEEPING`, we can't really encode that and will have to just deal with having it as `null` or `None`. This is how the formal definition of extended state machines work. But what if we can do better? OH PSYCHE.
 
 ## Idea and vague implementation details
-
 > Insert photo of Ferris waving here (the gif from Discord)
 
 So if you have used Rust for a good portion of time you will likely instinctively be thinking of modelling the State as an enum (especially that we can attach types to our variants like `currently_working_on`) and the Inputs as an enum and you'd definitely not be wrong!\
@@ -58,6 +57,19 @@ The goal here is to generate that mapping above statically at compile time WHILE
 [finite state machine]: https://en.wikipedia.org/wiki/Finite-state_machine
 
 ## Amendments
-
 I think it's better to have a `#[transitions]` macro be placable on top of a function that has to be `const` than to have a special `transitions!` macro with special syntax. Then we can "strip the types" from the enums on the function parameters (which must be `(state, input)` and each has to be annotated with a another macro) and in its content and call it statically with all valid `(state, input)` combinations and save that output into our EnumMap<EnumMap> thingie.
 This reminds me of things we can do in matches that are pretty crazy like `Input::GoTo(friend) if friend == "Mathy"` which might result in diverging states. We'd need state machine guards for this. I think it's fairly possible to have a graceful way to handle this once the types are stripped (`Input::GoTo` would just have two diverging outputs) though it'll make the `#[transitions]` macro _way_ harder to make.
+
+## Goal Summery
+This was quite chaotic because I written it quickly to get it off of my mind and make sure I won't forget any of the details I thought about. But basically the goal is:\
+What if we can have our cake and eat it too? What if we can have the beauty of
+```rs
+enum State {
+  // ...
+}
+enum Input {
+  // ...
+}
+fn transition(State, Input) -> State;
+```
+while still having all the benefits of a purely data driven representation of our data! In fact while I am writing this I remembered another benefit: we can use [`mem::unsafe_replace_with`](https://docs.rs/replace_with/0.1.6/replace_with/fn.replace_with_or_abort.html) internally (behind the macro) fearlessly because we know we will never panic so it's 100% safe!
