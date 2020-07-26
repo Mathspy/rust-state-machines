@@ -56,3 +56,8 @@ The last remaining piece of the puzzle is to remember this isn't "the end". The 
 The goal here is to generate that mapping above statically at compile time WHILE still having some form of usage of discriminate unions (Rust Enums). That's a power not present in any other implementation of state machines I have seen (they usually follow the specification to the word and end up with infinite state completely independent of the finite states)
 
 [finite state machine]: https://en.wikipedia.org/wiki/Finite-state_machine
+
+## Amendments
+
+I think it's better to have a `#[transitions]` macro be placable on top of a function that has to be `const` than to have a special `transitions!` macro with special syntax. Then we can "strip the types" from the enums on the function parameters (which must be `(state, input)` and each has to be annotated with a another macro) and in its content and call it statically with all valid `(state, input)` combinations and save that output into our EnumMap<EnumMap> thingie.
+This reminds me of things we can do in matches that are pretty crazy like `Input::GoTo(friend) if friend == "Mathy"` which might result in diverging states. We'd need state machine guards for this. I think it's fairly possible to have a graceful way to handle this once the types are stripped (`Input::GoTo` would just have two diverging outputs) though it'll make the `#[transitions]` macro _way_ harder to make.
